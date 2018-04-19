@@ -1,31 +1,25 @@
 import numpy as np
 print(b'0')
-def produce_smalest(precision=None):
+def produce_smalest(precision=float):
     """
     precsion: Class which precision.
+    return: smallest exponent of 2 wich can be represented
     """
-    
+    l=1
     y = 2
-    if precision:
-        x = precision(2.0)
-        precision_name = "single"
-    else:
-        x = np.float64(2.0)
-        precision_name = "double"
-    
-    
-    while y*2 == x**-(l-2):
-        y = x**-l
+    x=2.0  
+    while y>0.0:
+        y = precision(x**-l)
         l+=1
     
-    print("2^-{} is the smallest number one can produce with {} precision.".format(
-        l-1,precision_name))
-    
+    return l-2
+        
 
-
-produce_smalest(precision=np.float32) # produce smalest number with single precision
-produce_smalest()           # produce smalest number with double precision
-
+exponent = produce_smalest(precision=np.float32) # produce smalest number 
+                                                 # with single precision
+print("2^-{} is the samllest number which can be represented using single precision".format(exponent), np.float32(2**-exponent))
+exponent=produce_smalest()           # produce smalest number with double precision
+print("2^-{} is the samllest number which can be represented using double precision".format(exponent), 2.0**-exponent)
 
 
 
