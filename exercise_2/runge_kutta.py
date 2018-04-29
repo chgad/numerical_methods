@@ -109,5 +109,8 @@ def pendulum_force(x):
 
 
 first_try = RungeKutta4th(force=pendulum_force, r=0.00001, rdot=0.0, range=1000, file="first_try.csv")
-
-first_try.solve_OED()
+k = 1
+for i in [np.pi /4.0, np.pi/2.0, 3.0/4.0 * np.pi]:
+    runge= RungeKutta4th(force=pendulum_force, r=i, rdot=0.0, range=400, file="runge_kutta_{}pi.csv".format(k/4.0))
+    runge.solve_OED()
+    k += 1
