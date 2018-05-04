@@ -38,14 +38,14 @@ iterative_double = phi_by_iteration(20,sign="+")
 
 fig , ((ax1, ax2), (ax3, ax4)) = pyplot.subplots(2,2)
 
-ax1.plot(numbers,raise_phi_directly(numbers,"+",precision=np.float32),'or', label="Raised directly")
-ax1.plot(numbers,iterative_single,"bs", label="Iterative")
+ax1.loglog(numbers,raise_phi_directly(numbers,"+",precision=np.float32),'or', label="Raised directly")
+ax1.loglog(numbers,iterative_single,"bs", label="Iterative")
 ax1.set_title("Single Precsiion")
 
 ax1.legend(loc="best")
 
-ax2.plot(numbers,raise_phi_directly(numbers,"+"),"or", label="Raised directly")
-ax2.plot(numbers,iterative_double,"bs", label="Iterative")
+ax2.loglog(numbers,raise_phi_directly(numbers,"+"),"or", label="Raised directly")
+ax2.loglog(numbers,iterative_double,"bs", label="Iterative")
 ax2.set_title("Double Precsiion")
 
 ax2.legend(loc="best")
