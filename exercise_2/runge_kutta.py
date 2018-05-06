@@ -19,7 +19,7 @@
 
 import numpy as np
 import csv
-from math import sin
+
 
 
 class RungeKutta4th:
@@ -34,12 +34,10 @@ class RungeKutta4th:
         # y will become a pseudo matrix 2 D array
         self.y = np.array([r, rdot])
 
-        self.f = self.compute_f()
+        self.f = self.compute_f(self.y)
 
         self.range = range
         self.file_name = file
-        self.validate()
-
         # if everything is correct initalize the Runge-Kutta k's
 
         self.k1 = np.array([])
@@ -51,33 +49,22 @@ class RungeKutta4th:
         self.tau_range = np.arange(0.0, self.range*self.tau, self.tau)
         self.y_range = [self.r, ]
 
-    def validate(self):
-        if not self.force:
-            raise ValueError('Please provide a Force for computatuion')
-        if not self.r:
-            raise ValueError('Please provide Starting conditions for r')
-        if self.rdot is None:
-            raise ValueError('Please provide Starting conditions for rdot')
-        if not (self.tau and self.tau > 0.0):
-            raise ValueError('Please provide a tau > 0')
-
     def compute_f(self, y):
         return np.array([y[1], self.force(y)])
 
     def compute_k1(self):
+
         self.k1 = self.compute_f(self.y) * self.tau
 
     def compute_k2(self):
-        # help_f = np.array([self.y[1] + 0.5*self.k1[1], self.force(self.y[0] + 0.5*self.k1[0])])
 
         self.k2 = self.compute_f(self.y + 0.5*self.k1) * self.tau
 
     def compute_k3(self):
-        # help_f = np.array([self.y[1] + 0.5 * self.k2[1], self.force(self.y[0] + 0.5 * self.k2[0])])
+
         self.k3 = self.compute_f(self.y + 0.5*self.k2) * self.tau
 
     def compute_k4(self):
-        # help_f = np.array([self.y[1] + self.k3[1], self.force(self.y[0] + self.k3[0])])
         self.k4 = self.compute_f(self.y + self.k3) * self.tau
 
     def compute_all_k(self):
@@ -89,10 +76,19 @@ class RungeKutta4th:
     def compute_y(self):
         self.y = self.y + 1.0/6.0 * (self.k1 + 2*self.k2 + 2*self.k3 + self.k4)
 
+    def combine_rows(self):
+        values = []
+        h = 0
+        for t in self.tau_range:
+            values.append(np.insert(self.y_range[h], 0, t))
+            h += 1
+        return values
+
     def write_results_to_csv(self,file_name):
+        rows = self.combine_rows()
         with open(file_name, 'w') as f:
             writer = csv.writer(f)
-            writer.writerows(zip(self.tau_range, self.y_range))
+            writer.writerows(rows)
             f.close()
 
     def solve_OED(self):
@@ -114,14 +110,15 @@ def pendulum_force(y):
     :param y:
     :return: 1* N Dim array
     """
-    return -1*sin(y[1])
+    return -1*y[0]
 
 
-first_try = RungeKutta4th(force=pendulum_force, r=0.00001, rdot=0.0, range=1000, file="first_try.csv")
+first_try = RungeKutta4th(force=pendulum_force, r=np.array([0.00001, 0.00002, ]), rdot=np.array([0.0,0.0 ]),
+                          range=1000, file="first_try.csv")
 first_try.solve_OED()
 
-k = 1
-for i in [np.pi /4.0, np.pi/2.0, 3.0/4.0 * np.pi]:
-    runge= RungeKutta4th(force=pendulum_force, r=i, rdot=0.0, range=400, file="runge_kutta_{}pi.csv".format(k/4.0))
-    runge.solve_OED()
-    k += 1
+# k = 1
+# for i in [np.pi /4.0, np.pi/2.0, 3.0/4.0 * np.pi]:
+#     runge= RungeKutta4th(force=pendulum_force, r=i, rdot=0.0, range=400, file="runge_kutta_{}pi.csv".format(k/4.0))
+#     runge.solve_OED()
+#     k += 1
