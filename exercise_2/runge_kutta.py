@@ -26,10 +26,14 @@ class RungeKutta4th:
     def __init__(self, tau=0.1, force=None, r=None , rdot=None, range=None, file=""):
 
         self.tau = tau
+        # the force needs to take a 2 D array and handle it correctly
         self.force = force
+        # r and rdot are expected to be numpy arrays
         self.r = r
         self.rdot = rdot
+        # y will become a pseudo matrix 2 D array
         self.y = np.array([r, rdot])
+
         self.f = self.compute_f()
 
         self.range = range
@@ -57,24 +61,24 @@ class RungeKutta4th:
         if not (self.tau and self.tau > 0.0):
             raise ValueError('Please provide a tau > 0')
 
-    def compute_f(self):
-        return np.array([self.y[1], self.force(self.y[0])])
+    def compute_f(self, y):
+        return np.array([y[1], self.force(y)])
 
     def compute_k1(self):
-        self.k1 = self.compute_f() * self.tau
+        self.k1 = self.compute_f(self.y) * self.tau
 
     def compute_k2(self):
-        help_f = np.array([self.y[1] + 0.5*self.k1[1], self.force(self.y[0] + 0.5*self.k1[0])])
+        # help_f = np.array([self.y[1] + 0.5*self.k1[1], self.force(self.y[0] + 0.5*self.k1[0])])
 
-        self.k2 = help_f * self.tau
+        self.k2 = self.compute_f(self.y + 0.5*self.k1) * self.tau
 
     def compute_k3(self):
-        help_f = np.array([self.y[1] + 0.5 * self.k2[1], self.force(self.y[0] + 0.5 * self.k2[0])])
-        self.k3 = help_f * self.tau
+        # help_f = np.array([self.y[1] + 0.5 * self.k2[1], self.force(self.y[0] + 0.5 * self.k2[0])])
+        self.k3 = self.compute_f(self.y + 0.5*self.k2) * self.tau
 
     def compute_k4(self):
-        help_f = np.array([self.y[1] + self.k3[1], self.force(self.y[0] + self.k3[0])])
-        self.k4 = help_f * self.tau
+        # help_f = np.array([self.y[1] + self.k3[1], self.force(self.y[0] + self.k3[0])])
+        self.k4 = self.compute_f(self.y + self.k3) * self.tau
 
     def compute_all_k(self):
         self.compute_k1()
@@ -104,8 +108,13 @@ class RungeKutta4th:
         self.write_results_to_csv(file_name=self.file_name)
 
 
-def pendulum_force(x):
-    return -1*sin(x)
+def pendulum_force(y):
+    """
+    Y is a 2D array of 2 * N Dim : Y = [[x1, x2, x3 ..., xN] ,[xdot1, xdot2, xdot3, ..., xdotN]]
+    :param y:
+    :return: 1* N Dim array
+    """
+    return -1*sin(y[1])
 
 
 first_try = RungeKutta4th(force=pendulum_force, r=0.00001, rdot=0.0, range=1000, file="first_try.csv")
