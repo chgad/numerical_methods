@@ -91,13 +91,17 @@ class RungeKutta4th:
             writer.writerows(rows)
             f.close()
 
+    def perform_one_step(self):
+        # compute all k's for preparation to compute the new y
+        self.compute_all_k()
+        # compute new y
+        self.compute_y()
+
+
     def solve_OED(self):
         i = 1
         while i <= self.range:
-            # compute all k's for preparation to compute the new y
-            self.compute_all_k()
-            # compute new y
-            self.compute_y()
+            self.perform_one_step()
             # append y to the list of y values
             self.y_range.append(self.y[0])
             i += 1
