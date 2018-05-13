@@ -23,9 +23,7 @@ with open(file, 'r') as f:
         tau.append(float(row[row1]))
         r.append(float(row[row2]))
     f.close()
-print(tau)
-print(r)
-
+print(max(tau))
 plt.xlabel(r"$\tau$")
 plt.ylabel(r"$\phi$")
 
