@@ -21,7 +21,6 @@ import numpy as np
 import csv
 
 
-
 class RungeKutta4th:
     def __init__(self, tau=0.1, force=None, r=None , rdot=None, range=None, file=""):
 
@@ -74,7 +73,7 @@ class RungeKutta4th:
         self.compute_k4()
 
     def compute_y(self):
-        self.y = self.y + 1.0/6.0 * (self.k1 + 2*self.k2 + 2*self.k3 + self.k4)
+        return self.y + 1.0/6.0 * (self.k1 + 2*self.k2 + 2*self.k3 + self.k4)
 
     def combine_rows(self):
         values = []
@@ -95,13 +94,12 @@ class RungeKutta4th:
         # compute all k's for preparation to compute the new y
         self.compute_all_k()
         # compute new y
-        self.compute_y()
-
+        return self.compute_y()
 
     def solve_OED(self):
         i = 1
         while i <= self.range:
-            self.perform_one_step()
+            self.y = self.perform_one_step()
             # append y to the list of y values
             self.y_range.append(self.y[0])
             i += 1
