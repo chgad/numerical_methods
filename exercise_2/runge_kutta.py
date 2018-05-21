@@ -22,7 +22,9 @@ import csv
 
 
 class RungeKutta4th:
-    def __init__(self, tau=0.1, force=None, r=None , rdot=None, range=None, file=""):
+    def __init__(self, tau=0.1, force=None, r=None, rdot=None, range=None, file="", output=True):
+        # if we want to create an output file output must be true.
+        self.output = output
 
         self.tau = tau
         # the force needs to take a 2 D array and handle it correctly
@@ -32,8 +34,6 @@ class RungeKutta4th:
         self.rdot = rdot
         # y will become a pseudo matrix 2 D array
         self.y = np.array([r, rdot])
-
-        self.f = self.compute_f(self.y)
 
         self.range = range
         self.file_name = file
@@ -103,7 +103,8 @@ class RungeKutta4th:
             # append y to the list of y values
             self.y_range.append(self.y[0])
             i += 1
-        self.write_results_to_csv(file_name=self.file_name)
+        if self.output:
+            self.write_results_to_csv(file_name=self.file_name)
 
 
 def pendulum_force(y):
