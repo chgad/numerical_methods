@@ -16,11 +16,12 @@ tau = []
 with open(file, 'r') as f:
     reader = csv.reader(f, delimiter=",")
     for row in reader:
-        x.append(float(row[row1]))
+        # x.append(float(row[row1]))
         y.append(float(row[row2]))
         tau.append(float(row[0]))
     f.close()
 
+print(tau[-1])
 # Case of 0 excentricity --> check for working algorithm
 # circle_x = np.cos(np.arange(0.0, 2*np.pi, 0.01))
 # circle_y = np.sin(np.arange(0.0, 2*np.pi, 0.01))
@@ -56,43 +57,44 @@ with open(file, 'r') as f:
 # find index where y coordinate becomes positive for first time
 #  this equals a half period
 # get the corresponding time and multiply by two
-index = 1
-while y[index] < -sys.float_info.min:
-    index += 1
 
-half_period = tau[index]
-
-period = half_period * 2
-
-print(period)
-
-excen1, excen2 = (0.1, 0.9)
-
-a1, a2 = (1.1, 1.9)
-
-b1, b2 = a1*np.sqrt(1-excen1**2), a2*np.sqrt(1-excen2**2)
-
-p1, p2 = b1, b2
-
-v1, v2 = np.sqrt(p1)/a1, np.sqrt(p2)/a2
-
-
-
-a1, t1 = 1, 14.30154545586655
-a2,t2 = 1, 13.531666219993632
-print("(a1/a2)³ = {0}, (T1/T2)² = {1}".format((a1/a2)**3, (t1/t2)**2))
+# index = 1
+# while y[index] < -sys.float_info.min:
+#     index += 1
+#
+# half_period = tau[index]
+#
+# period = half_period * 2
+#
+# print(period)
+#
+# excen1, excen2 = (0.1, 0.9)
+#
+# a1, a2 = (1.1, 1.9)
+#
+# b1, b2 = a1*np.sqrt(1-excen1**2), a2*np.sqrt(1-excen2**2)
+#
+# p1, p2 = b1, b2
+#
+# v1, v2 = np.sqrt(p1)/a1, np.sqrt(p2)/a2
+#
+#
+#
+# a1, t1 = 1, 14.30154545586655
+# a2,t2 = 1, 13.531666219993632
+# print("(a1/a2)³ = {0}, (T1/T2)² = {1}".format((a1/a2)**3, (t1/t2)**2))
 
 
 plt.xlabel(r"$x$")
 plt.ylabel(r"$y$")
 axes = plt.gca()
 axes.axhline(color='r')
-axes.set_xlim([-2.0,2.0])
-axes.set_ylim([-2.0,2.0])
-plt.plot(x, y, label="RK 4th Order")
+# axes.set_xlim([-2.0,2.0])
+# axes.set_ylim([-2.0,2.0])
+plt.plot(tau, y, label="RK 4th Order")
 # plt.plot(tau, y, label="y(t)")
 # plt.plot(circle_x, circle_y, label="Circle")
-# plt.plot(tau, np.array(r)-cosine(np.array(tau)), label="Absolute difference computed phi and cosine")
+plt.plot(tau, 0.0000001*np.cos(np.array(tau)), label="Analytical")
 plt.legend(loc="best")
 plt.show()
 
