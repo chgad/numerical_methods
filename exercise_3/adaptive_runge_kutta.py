@@ -27,11 +27,11 @@ class AdaptiveRungeKutta4th(RungeKutta4th):
         return sum(np.linalg.norm(y_tau_halfs-y_tau, ord=np.inf, axis=0))/15
 
     def compute_new_tau(self, calculated_delta, tau):
-        prefactor = 0.9 * (calculated_delta/self.abs_error)**(1/5)
+        prefactor = 0.9 * (self.abs_error/calculated_delta)**(1/5)
 
         # clamp the new tau to [0.2*tau, 5.0*tau] to avoid toooooo small steps
         if prefactor <= self.allowed_tau[0]:
-            prefactor = 0.5
+            prefactor = 0.2
         elif prefactor >= self.allowed_tau[1]:
             prefactor = 5.0
         return prefactor * tau
@@ -53,14 +53,16 @@ class AdaptiveRungeKutta4th(RungeKutta4th):
                 new_tau = self.compute_new_tau(calculated_delta=delta, tau=t)
                 # if tau half was a good option we need to reduce our time evolution parameter tau
                 if delta <= self.abs_error:
-                    self.y = one_tau_y
+                    self.y = two_tau_halfs_y
                     self.y_range.append(self.y[0])
                     self.tau_range.append(self.recenttime)
                     self.recenttime += t
+                    self.tau = new_tau
 
                 # else redo the same with the new tau
                 else:
                     self.tau = new_tau
+                    self.recenttime = self.tau
                     i -= 1
 
                 i += 1
@@ -81,8 +83,8 @@ def pendulum_force(y):
 
 
 # None adaptive
-first_try = AdaptiveRungeKutta4th(tau=0.01, abs_error=1e-8, force=pendulum_force, r=np.array([0.0000001, ]), rdot=np.array([0.0, ]),
-                                  range=10000, file="first_try.csv", adaptive=True)
+first_try = AdaptiveRungeKutta4th(tau=0.001, abs_error=1e-12, force=pendulum_force, r=np.array([0.0000001, ]), rdot=np.array([0.0, ]),
+                                  range=100000, file="first_try.csv", adaptive=False)
 first_try.solve_OED()
 
 print(first_try.combine_rows()[1])
