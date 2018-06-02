@@ -3,15 +3,16 @@ import numpy as np
 
 class LUDecomposition:
 
-    def __init__(self, matrix,vectors):
+    def __init__(self, matrix, vectors, pivot=None):
         self.matrix = matrix
         self.vectors = vectors
         self.validate()
         self.dim = self.matrix.shape[0]
         self.U = np.zeros((self.dim,self.dim))
         self.L = np.identity(self.dim)
-
-
+        self.y = np.zeros(self.vectors.shape)
+        self.x = np.zeros(self.vectors.shape)
+        self.pivot = pivot
 
     def validate(self):
         """
@@ -25,40 +26,108 @@ class LUDecomposition:
         assert matrix_shape[0] == matrix_shape[1]
         assert vectors_shape[1] == matrix_shape[1]
 
-    def sum(self, limit=0, column=0, row=0):
+    def pivot(self):
+        if not self.pivot:
+            pass
+        else:
+            
+
+
+    def matrix_multiplikation(self, limit=0, column=0, row=0, usecase=None, vector= None, l=0):
+        """
+
+        :param limit:
+        :param column:
+        :param row:
+        :param usecase: 0 --> L * U
+                        1 --> L * y
+                        2 --> U * x
+        :return:
+        """
+        uses = {0: [self.L, self.U],
+                1: [self.L, vector],
+                2: [self.U, vector]}
+        mult1, mult2 = uses[usecase]
+
         if limit < 0:
             return 0
-        l = 0
         summ = 0.0
-        while l <= limit:
-            summ += self.L[row][l] * self.U[l][column]
-            l += 1
+        if not usecase:
+            while l <= limit:
+                summ += mult1[row][l] * mult2[l][column]
+                l += 1
+        else:
+            while l <= limit:
+                summ += mult1[row][l] * mult2[l]
+                l += 1
         return summ
 
-    def set_lower(self):
-        self.L[1][0]= 1000
+    def vector_matrix_multiplication(self, limit=0, row=0, y=None):
+        if limit < 0:
+            return 0
+        summ = 0
+        k = 0
+        while k <= limit:
+            summ += self.L[row][k]*y[k]
+            k += 1
+
+        return summ
 
     def decomposition(self):
+        """
+        This method decomposes the Matrix A into two Matrises L and U such that
+        A = L U holds.
+        :return:
+        """
         k = 0
         while k <= self.dim - 1:
             j = 0
             while j <= k:
-                self.U[j][k] = self.matrix[j][k] - self.sum(row=j, column=k, limit=j-1)
+                self.U[j][k] = self.matrix[j][k] - self.matrix_multiplikation(row=j, column=k, limit=j-1, usecase=0)
                 j += 1
 
             j = k+1
             while j <= self.dim - 1:
-                self.L[j][k] = (self.matrix[j][k] - self.sum(row=j, column=k, limit=j-1))/self.U[k][k]
+                self.L[j][k] = (self.matrix[j][k] -
+                                self.matrix_multiplikation(row=j, column=k, limit=j-1, usecase=0))/self.U[k][k]
                 j += 1
 
             k += 1
 
+    def solve_y(self):
+        """
+        This method solves Ax = LUx = Ly = b where we only compute  Ux = y
+        :return:
+        """
+        j = 0
 
-matrix = np.array([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
+        while j <= self.dim - 1:
+            for y, b in zip(self.y, self.vectors):
+                y[j] = b[j] - self.matrix_multiplikation(limit=j-1, row=j, vector=y, usecase=1)
+            j += 1
 
-solving = LUDecomposition(matrix=matrix, vectors=np.array([[1, 1,1]]))
+    def solve_x(self):
+        j = self.dim - 1
+        while j >= 0:
+            for x, y in zip(self.x, self.y):
+                x[j] = (y[j] - self.matrix_multiplikation(limit=self.dim-1, l=j+1, usecase=2, row=j, vector=x))\
+                       / self.U[j][j]
+            j -= 1
+
+
+# matrix = np.array([[0.6, 0.13, 1.28], [0.0123, 0.078, 0.97], [0.5, 0.47, 0.718]])
+
+matrix = np.random.rand(10, 10)
+vector = np.full((1, 10), 1.0)
+
+solving = LUDecomposition(matrix=matrix, vectors=vector)
 solving.decomposition()
-print(solving.dim)
-print(solving.matrix[0][1])
-print("upper \n", solving.U)
-print("lower \n", solving.L)
+solving.solve_y()
+solving.solve_x()
+# print(solving.matrix)
+# print("upper \n", solving.U)
+# print("lower \n", solving.L)
+# print("y \n", solving.y)
+# print("x \n", solving.x)
+
+print(np.matmul(matrix, solving.x[0])-vector[0])
