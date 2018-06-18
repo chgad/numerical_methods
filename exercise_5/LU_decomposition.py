@@ -30,7 +30,8 @@ class LUDecomposition:
         if not self.pivot:
             pass
         else:
-            
+            pass
+
 
 
     def matrix_multiplikation(self, limit=0, column=0, row=0, usecase=None, vector= None, l=0):
