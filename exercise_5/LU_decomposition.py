@@ -1,9 +1,11 @@
 import numpy as np
+import csv
 
 
 class LUDecomposition:
 
-    def __init__(self, matrix, vectors, pivot=None):
+    def __init__(self, matrix, vectors, file, pivot=None):
+        self.file = file
         self.matrix = matrix
         self.vectors = vectors
         self.validate()
@@ -30,8 +32,7 @@ class LUDecomposition:
         if not self.pivot:
             pass
         else:
-            
-
+            pass
 
     def matrix_multiplikation(self, limit=0, column=0, row=0, usecase=None, vector= None, l=0):
         """
@@ -114,20 +115,45 @@ class LUDecomposition:
                        / self.U[j][j]
             j -= 1
 
+    def export(self, rows,file):
+        with open(file, "w") as f:
+            writer = csv.writer(f)
+            writer.writerows(rows)
+            f.close()
+
+    def calculate_errors(self):
+        errors = []
+        i=0
+        for b in self.vectors:
+            errors.append(np.linalg.norm(np.matmul(matrix, self.x[i])-b))
+            i += 1
+        return errors
+
+    def solve_all(self):
+        self.solve_y()
+        self.solve_x()
+
+    def compute(self):
+        self.solve_all()
+        rows = zip(range(len(self.x)), self.x)
+        self.export(rows,self.file)
+        errors = self.calculate_errors()
+        error_rows = zip(range(len(self.x)), errors)
+        self.export(error_rows, "errors_" + self.file)
 
 # matrix = np.array([[0.6, 0.13, 1.28], [0.0123, 0.078, 0.97], [0.5, 0.47, 0.718]])
 
-matrix = np.random.rand(10, 10)
-vector = np.full((1, 10), 1.0)
 
-solving = LUDecomposition(matrix=matrix, vectors=vector)
-solving.decomposition()
-solving.solve_y()
-solving.solve_x()
-# print(solving.matrix)
-# print("upper \n", solving.U)
-# print("lower \n", solving.L)
-# print("y \n", solving.y)
-# print("x \n", solving.x)
+def exp(A):
+    return np.exp(A)
 
-print(np.matmul(matrix, solving.x[0])-vector[0])
+
+f = np.vectorize(exp)
+
+for N in [10,100,200]:
+    matrix = f(np.random.uniform(low=-5.0,high=5.0,size=(N, N)))
+    vector = np.random.rand(10, N)
+    solving = LUDecomposition(matrix=matrix, vectors=vector, file="dim_exp_{}.csv".format(N))
+    solving.decomposition()
+    solving.compute()
+
