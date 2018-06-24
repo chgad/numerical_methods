@@ -1,6 +1,12 @@
 import numpy as np
 
 
+def sign(x):
+    if x >= 0:
+        return 1
+    else:
+        return -1
+
 
 class Jacoby:
 
@@ -10,7 +16,6 @@ class Jacoby:
         self.dim = self.matrix.shape[0]
         self.p = 0  # first row off diagonal
         self.q = 1  # first column off diagonal
-        self.calcs = self.dim*(self.dim-1)*0.5  # this is the total number of off-diagonal elements
         self.error = error
 
     def change_off_diagonals(self):
@@ -31,7 +36,7 @@ class Jacoby:
         return (self.matrix[self.q][self.q] - self.matrix[self.p][self.p])/(2.0*self.matrix[self.p][self.q])
 
     def calculate_tan(self, theta):
-        return np.sign(theta)/(np.abs(theta) + np.power(theta**2+1.0, 0.5))
+        return sign(theta)/(np.abs(theta) + np.power(theta**2+1.0, 0.5))
 
     def calculate_rotation_stuff(self):
         theta = self.calculate_theta()
@@ -41,24 +46,29 @@ class Jacoby:
     def calculate_tau_sin(self, tan):
         tan_x_half = tan / (1.0 + np.power(1.0 + tan ** 2, 0.5))
         sin = 2.0*tan_x_half/(1+tan_x_half**2)
-        cos = (1.0-tan_x_half**2)/(1.0+tan_x_half**2)
+        return tan_x_half, sin
 
-        return tan_x_half * sin/(1.0+cos), sin
+    def compute_diagonals(self, p, q, tan):
+        self.matrix[p][p] -= tan * self.matrix[p][q]
+        self.matrix[q][q] += tan * self.matrix[p][q]
 
-    def compute_rest_elements(self, p, q, sin, tau, set_index):
+    def set_p_q_element_zero(self, p, q):
+        self.matrix[p][q] = 0.0
+        self.matrix[q][p] = 0.0
+
+    def compute_rest_elements(self, p, q, sin, tau):
         k = 0
-
-        other_index = q if set_index == p else p
-        sign = -1.0 if set_index == p else 1.0
-
         while k < self.dim:
             if k == q or k == p:
                 k += 1
                 continue
+            old_a_k_p = self.matrix[k][p]
 
-            self.matrix[set_index][k] += sign * sin * (self.matrix[k][other_index] - sign * tau * self.matrix[k][set_index])
-            self.matrix[k][set_index] = self.matrix[set_index][k]
+            self.matrix[p][k] -= sin * (self.matrix[k][q] + tau * self.matrix[k][p])
+            self.matrix[k][p] = self.matrix[p][k]
 
+            self.matrix[q][k] += sin * (old_a_k_p - tau * self.matrix[k][q])
+            self.matrix[k][q] = self.matrix[q][k]
             k += 1
 
     def compute_deviation(self):
@@ -77,15 +87,11 @@ class Jacoby:
         return S
 
     def calculate(self):
-
         tan = 0
         s = 1000.0
-
         while s > self.error:
-
             p = self.p
             q = self.q
-            # find theta
 
             if self.matrix[self.p][self.q] == 0.0:
                 self.change_off_diagonals()
@@ -93,32 +99,34 @@ class Jacoby:
 
             tan = self.calculate_rotation_stuff()
             tau, sin = self.calculate_tau_sin(tan)
-            print(tan, sin)
-            self.matrix[p][p] -= tan * self.matrix[p][q]
-            self.matrix[q][q] += tan * self.matrix[p][q]
-            self.matrix[p][q] = 0.0
-            self.matrix[q][p] = 0.0
+            # calculate new diagonals and set the p_q q_p elements to Zero
+            self.compute_diagonals(p=p, q=q, tan=tan)
+            self.set_p_q_element_zero(p=p,q=q)
 
             # compute A_k_p
-            self.compute_rest_elements(p=p, q=q, sin=sin, tau=tau, set_index=p)
-            # compute A_k_p
-            self.compute_rest_elements(p=p, q=q, sin=sin, tau=tau, set_index=q)
+            self.compute_rest_elements(p=p, q=q, sin=sin, tau=tau)
 
             s = self.compute_deviation()
-
-
             self.change_off_diagonals()
 
 
-test_matrix = np.array([[2.0, 1.0],[1.0, 2.0]])
+# Test stuff
 
-thre_b_thre = np.array([[3.0,0.0,1.0],[0.0,1.0,0.0],[1.0,0.0,3.0]])
-
-solving = Jacoby(thre_b_thre, error=1e-18)
-
-solving.calculate()
-
-print(solving.matrix)
+# test_matrix = np.array([[2.0, 1.0],[1.0, 2.0]])
+#
+# thre_b_thre = np.array([[3.0,2.0,1.0],[2.0,1.0,0.0],[1.0,0.0,3.0]])
+#
+# test = np.array(
+#     [[4.0, 1.0, 3.0, 1.0],
+#      [1.0, 6.0, 12.0, 11.0],
+#      [3.0, 12.0, 3.0, 5.0],
+#      [1.0, 11.0, 5.0, 9.0]])
+#
+# solving = Jacoby(thre_b_thre, error=1e-6)
+#
+# solving.calculate()
+#
+# print(solving.matrix)
 
 
 
