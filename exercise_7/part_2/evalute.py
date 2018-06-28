@@ -1,15 +1,17 @@
 import numpy as np
 import sys
-sys.path.append('../')
+
+sys.path.append('..')
 
 from part_1.jacoby import Jacoby
+
 
 def build_matrix(dim=None, periodic=False):
     if not dim:
         raise ValueError("Please enter a Dimension for the matrix")
-    dim_sq = dim **2
-    last_row = dim_sq -dim
-    matrix = 4*np.identity(dim_sq, dtype=float) # initialize j==k with -4
+    dim_sq = dim ** 2
+    last_row = dim_sq - dim
+    matrix = 4 * np.identity(dim_sq, dtype=float)  # initialize j==k with -4
 
     if periodic:
         j = 0
@@ -83,42 +85,47 @@ class BuildMatrix:
     def __init__(self, dim, periodic=False):
 
         self.dim = dim
-        self.dim_sq = dim**2
+        self.dim_sq = dim ** 2
         self.last_row = self.dim_sq - self.dim
         self.periodic = periodic
+        self.index_func = self.get_index_func()
         self.matrix = self.build_matrix()
 
-    def construct_diagonal(self):
-        return 4*np.identity(self.dim_sq, dtype=float)
+    def get_index_func(self):
+        if self.periodic:
+            return self.real_periodic_index
+        return self.real_non_periodic_index
 
     def build_matrix(self):
-        matrix = self.construct_diagonal()
-        j=0
+        matrix = np.zeros((self.dim_sq, self.dim_sq))
+        j = 0
 
         while j < self.dim_sq:
-            if self.periodic:
-                # produces the correct indexes
-                indexes= self.get_indexes(j)
-                for index in indexes:
-                    matrix[j][index] = -1
-                j += 1
+            # produces the correct indexes
+            indexes = self.get_indexes(j)
+            for index in indexes:
+                if index == "x":
+                    continue
+                matrix[j][index] = -1
+            matrix[j][j] = np.count_nonzero(matrix[j] == -1)
+            j += 1
         return matrix
 
-    def get_indexes(self,j):
-        d = self.real_periodic_index(j, -1)
-        f = self.real_periodic_index(j, 1)
-        g = self.real_periodic_index(j,-self.dim)
-        h = self.real_periodic_index(j,self.dim)
+    def get_indexes(self, j):
+        d = self.index_func(j, -1)
+        f = self.index_func(j, 1)
+        g = self.index_func(j, -self.dim)
+        h = self.index_func(j, self.dim)
         return d, f, g, h
 
-    def real_periodic_index(self, j,add):
+    def real_periodic_index(self, j, add):
         if -1 <= add <= 1:
             # the problem with -1 and 1 are the upper and lower boundaries. So we only need to look at those cases
-            if not j%self.dim and add == -1 :
+            if not j % self.dim and add == -1:
                 # upper boundary only -1 is a problem
                 return j + self.dim - 1
 
-            if not (j+1)%self.dim and add == 1:
+            if not (j + 1) % self.dim and add == 1:
                 # lower boundary
                 return j - self.dim + 1
             return j + add
@@ -126,19 +133,60 @@ class BuildMatrix:
             # it is obviously dim . the problem with +dim and - dim are the right and left border.
             if j <= self.dim - 1 and add < 0:
                 return self.last_row + j
-            if j >= self.last_row and add >0:
+            if j >= self.last_row and add > 0:
                 return j - self.last_row
             return j + add
 
+    def real_non_periodic_index(self, j, add):
+        # we return "x" if the index shall not be set.
+        if -1 <= add <= 1:
+            # the problem with -1 and 1 are the upper and lower boundaries. So we only need to look at those cases
+            if not j % self.dim and add == -1:
+                # upper boundary only -1 is a problem
+                return "x"
 
-matrix = build_matrix(dim=4, periodic=True)
-matrix_class = BuildMatrix(dim=4, periodic=True).matrix
+            if not (j + 1) % self.dim and add == 1:
+                # lower boundary
+                return "x"
+            return j + add
+        else:
+            # it is obviously dim . the problem with +dim and - dim are the right and left border.
+            if j <= self.dim - 1 and add < 0:
+                return "x"
+            if j >= self.last_row and add > 0:
+                return "x"
+            return j + add
 
-if np.array_equal(matrix, matrix_class):
-    print("WoHOOOOOOO")
-else:
-    for i in matrix_class:
-        print(i)
-        input()
+
+# matrix for periodic Boundaries
+# matrix_class = BuildMatrix(dim=4, periodic=True).matrix
+
+# matrix for None periodic boundaries
+matrix_class = BuildMatrix(dim=4, periodic=False).matrix
+
+solved = Jacoby(matrix=matrix_class, error=1e-80)
+
+solved.calculate()
+
+x = []
+
+for j in range(16):
+    x.append((solved.matrix[j][j]))
+
+x.sort()
+
+print(x)
 
 
+# x = [
+#     np.array([0.32, +0.32, +0.32, +0.32, +0.32, +0.32, +0.32, +0.32, +0.32, +0.32]),
+#     np.array([-0.07, +0.20, -0.32, +0.40, -0.44, +0.44, -0.40, +0.32, -0.20, +0.07]),
+#     np.array([-0.44, -0.40, -0.32, -0.20, -0.07, +0.07, +0.20, +0.32, +0.40, +0.44]),
+#     np.array([+0.26, -0.43, -0.00, +0.43, -0.26, -0.26, +0.43, +0.00, -0.43, +0.26]),
+#     np.array([+0.36, -0.14, -0.45, -0.14, +0.36, +0.36, -0.14, -0.45, -0.14, +0.36]),
+#     np.array([+0.14, -0.36, +0.45, -0.36, +0.14, +0.14, -0.36, +0.45, -0.36, +0.14]),
+#     np.array([+0.43, +0.26, +0.00, -0.26, -0.43, -0.43, -0.26, -0.00, +0.26, +0.43]),
+#     np.array([-0.20, +0.44, -0.32, -0.07, +0.40, -0.40, +0.07, +0.32, -0.44, +0.20]),
+#     np.array([+0.32, -0.32, -0.32, +0.32, +0.32, -0.32, -0.32, +0.32, +0.32, -0.32]),
+#     np.array([-0.40, -0.07, +0.32, +0.44, +0.20, -0.20, -0.44, -0.32, +0.07, +0.40]),
+# ]

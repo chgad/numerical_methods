@@ -101,7 +101,7 @@ class Jacoby:
             tau, sin = self.calculate_tau_sin(tan)
             # calculate new diagonals and set the p_q q_p elements to Zero
             self.compute_diagonals(p=p, q=q, tan=tan)
-            self.set_p_q_element_zero(p=p,q=q)
+            self.set_p_q_element_zero(p=p ,q=q)
 
             # compute A_k_p
             self.compute_rest_elements(p=p, q=q, sin=sin, tau=tau)
