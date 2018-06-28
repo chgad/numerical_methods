@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import sys
 
 sys.path.append('..')
@@ -158,24 +159,58 @@ class BuildMatrix:
             return j + add
 
 
+def evaluate_x(index, eigen_vectors, eigen_values, time):
+    i = 0
+    y = np.zeros(49)
+    ret_arr = []
+    for t in time:
+        while i < 49:
+            eigen = eigen_vectors[:, i]
+            y += eigen * eigen[0]*np.cos(np.sqrt(eigen_values[i][i])*t)
+            i += 1
+        ret_arr.append(y[index])
+        y = np.zeros(49)
+        i = 0
+    return ret_arr
+
+
 # matrix for periodic Boundaries
 # matrix_class = BuildMatrix(dim=4, periodic=True).matrix
 
 # matrix for None periodic boundaries
-matrix_class = BuildMatrix(dim=4, periodic=False).matrix
+# matrix_class = BuildMatrix(dim=4, periodic=False).matrix
 
-solved = Jacoby(matrix=matrix_class, error=1e-80)
+# matrix for None periodic boundaries with 7 dim
+
+
+matrix_class = BuildMatrix(dim=7, periodic=False).matrix
+time = np.arange(0.0, 30.0, step=0.1)
+
+
+solved = Jacoby(matrix=matrix_class, error=1e-20)
 
 solved.calculate()
 
-x = []
+print(solved.eigen_vectors[:, 1])
 
-for j in range(16):
-    x.append((solved.matrix[j][j]))
+for j in [0, 6, 24, 48]:
+    x = evaluate_x(index=j, eigen_vectors=solved.eigen_vectors, eigen_values=solved.matrix, time=time)
+    plt.plot(time, x, ".", label="j={}".format(j))
 
-x.sort()
+plt.legend(loc="best")
+plt.show()
+# print(solved.eigen_vectors)
+#
+# x = []
+#
+# for j in range(16):
+#     x.append((solved.matrix[j][j]))
+#
+# x.sort()
+#
+# print(x)
 
-print(x)
+
 
 
 # x = [

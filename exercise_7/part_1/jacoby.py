@@ -17,6 +17,7 @@ class Jacoby:
         self.p = 0  # first row off diagonal
         self.q = 1  # first column off diagonal
         self.error = error
+        self.eigen_vectors = np.identity(self.dim)
 
     def change_off_diagonals(self):
 
@@ -46,7 +47,8 @@ class Jacoby:
     def calculate_tau_sin(self, tan):
         tan_x_half = tan / (1.0 + np.power(1.0 + tan ** 2, 0.5))
         sin = 2.0*tan_x_half/(1+tan_x_half**2)
-        return tan_x_half, sin
+        cos = (1-tan_x_half**2)/(1+tan_x_half**2)
+        return tan_x_half, sin, cos
 
     def compute_diagonals(self, p, q, tan):
         self.matrix[p][p] -= tan * self.matrix[p][q]
@@ -86,6 +88,14 @@ class Jacoby:
 
         return S
 
+    def compute_eigen_vectors(self, p, q, sin, tau):
+        k = 0
+        while k < self.dim:
+            old_eigen_k_p = self.eigen_vectors[k][p]
+            self.eigen_vectors[k][p] -= sin * (self.eigen_vectors[k][q] + tau * self.eigen_vectors[k][p])
+            self.eigen_vectors[k][q] += sin * (old_eigen_k_p - tau * self.eigen_vectors[k][q])
+            k += 1
+
     def calculate(self):
         tan = 0
         s = 1000.0
@@ -93,19 +103,18 @@ class Jacoby:
             p = self.p
             q = self.q
 
-            if self.matrix[self.p][self.q] == 0.0:
+            if self.matrix[p][q] == 0.0:
                 self.change_off_diagonals()
                 continue
 
             tan = self.calculate_rotation_stuff()
-            tau, sin = self.calculate_tau_sin(tan)
+            tau, sin, cos = self.calculate_tau_sin(tan)
             # calculate new diagonals and set the p_q q_p elements to Zero
             self.compute_diagonals(p=p, q=q, tan=tan)
-            self.set_p_q_element_zero(p=p ,q=q)
-
+            self.set_p_q_element_zero(p=p, q=q)
             # compute A_k_p
             self.compute_rest_elements(p=p, q=q, sin=sin, tau=tau)
-
+            self.compute_eigen_vectors(p=p, q=q, sin=sin, tau=tau)
             s = self.compute_deviation()
             self.change_off_diagonals()
 
@@ -115,24 +124,18 @@ class Jacoby:
 # test_matrix = np.array([[2.0, 1.0],[1.0, 2.0]])
 #
 # thre_b_thre = np.array([[3.0,2.0,1.0],[2.0,1.0,0.0],[1.0,0.0,3.0]])
-#
+
 # test = np.array(
 #     [[4.0, 1.0, 3.0, 1.0],
 #      [1.0, 6.0, 12.0, 11.0],
 #      [3.0, 12.0, 3.0, 5.0],
 #      [1.0, 11.0, 5.0, 9.0]])
 #
-# solving = Jacoby(thre_b_thre, error=1e-6)
+# solving = Jacoby(thre_b_thre, error=1e-20)
 #
 # solving.calculate()
-#
-# print(solving.matrix)
-
-
-
-
-
-
-
-
-
+# print("Eigenvectors: \n",solving.eigen_vectors)
+# print("Eigenvalues: \n", solving.matrix)
+# thre_b_thre = np.array([[3.0,2.0,1.0],[2.0,1.0,0.0],[1.0,0.0,3.0]])
+# print("Eigenvalue = {:.6}".format(solving.matrix[1][1]), "And corresponding eigen vektor", solving.eigen_vectors[:, 1]/solving.eigen_vectors[:,1][2])
+# print(solving.eigen_vectors[:, 1] * solving.matrix[1][1], "=", np.matmul(thre_b_thre, solving.eigen_vectors[:, 1]))
