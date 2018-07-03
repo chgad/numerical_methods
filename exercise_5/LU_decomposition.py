@@ -32,8 +32,6 @@ class LUDecomposition:
         else:
             pass
 
-
-
     def matrix_multiplikation(self, limit=0, column=0, row=0, usecase=None, vector= None, l=0):
         """
 
@@ -117,18 +115,19 @@ class LUDecomposition:
 
 
 # matrix = np.array([[0.6, 0.13, 1.28], [0.0123, 0.078, 0.97], [0.5, 0.47, 0.718]])
-
-matrix = np.random.rand(10, 10)
-vector = np.full((1, 10), 1.0)
-
-solving = LUDecomposition(matrix=matrix, vectors=vector)
-solving.decomposition()
-solving.solve_y()
-solving.solve_x()
+#
+# matrix = np.random.rand(10, 10)
+# vector = np.full((1, 10), 1.0)
+matrix =np.array([[3,6],[6,14]])
+vector = np.array([[ 905.55555556,1466.66666667]])
+# solving = LUDecomposition(matrix=matrix, vectors=vector)
+# solving.decomposition()
+# solving.solve_y()
+# solving.solve_x()
 # print(solving.matrix)
 # print("upper \n", solving.U)
 # print("lower \n", solving.L)
 # print("y \n", solving.y)
 # print("x \n", solving.x)
 
-print(np.matmul(matrix, solving.x[0])-vector[0])
+# print(np.matmul(matrix, solving.x[0])-vector[0])
